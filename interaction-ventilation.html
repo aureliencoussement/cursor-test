@@ -936,6 +936,12 @@
         const tones = personTones[i % personTones.length];
         const person = document.createElement("div");
         person.className = "person-card";
+        // Fill visual slots from the bottom row so initial occupants
+        // appear near the floor and remain visible at startup.
+        const row = 3 - Math.floor(i / 4);
+        const col = (i % 4) + 1;
+        person.style.gridRow = String(row);
+        person.style.gridColumn = String(col);
         person.innerHTML = `
           <div class="person-figure" style="--delay:${(i % 6) * 0.12}s;">
             <div class="person-head" style="--tone-head:${tones.head};"></div>
