@@ -1,0 +1,945 @@
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.sim-wrap {
+  --ok: #5fa428;
+  --warn: #ef9f27;
+  --danger: #e24b4a;
+  --air-cold: #6ab4ff;
+  --air-stale: #c5a17d;
+  --room-floor: #f5f2eb;
+  --room-wall: #f9fafc;
+  font-family: var(--font-sans, "Segoe UI", sans-serif);
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px;
+  position: relative;
+}
+
+.sim-card {
+  background: var(--color-background-primary, #fff);
+  border: 1px solid var(--color-border-tertiary, #d9dce2);
+  border-radius: var(--border-radius-lg, 12px);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 16px 34px -26px rgba(10, 20, 40, 0.36);
+}
+
+.sim-header {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--color-border-tertiary, #d9dce2);
+  background: linear-gradient(180deg, #fbfcff 0%, #ffffff 100%);
+}
+
+.sim-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary, #222);
+  margin-bottom: 6px;
+}
+
+.sim-header p {
+  font-size: 13px;
+  color: var(--color-text-secondary, #5e6572);
+  line-height: 1.55;
+}
+
+.sim-body {
+  display: grid;
+  grid-template-columns: minmax(350px, 1fr) minmax(380px, 1fr);
+}
+
+.col-left {
+  padding: 22px 24px;
+  border-right: 1px solid var(--color-border-tertiary, #d9dce2);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.col-right {
+  padding: 20px;
+  background: radial-gradient(circle at 20% -20%, #f0f7ff 0%, #f7f8fb 55%, #f4f5f8 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ctrl-section { display: flex; flex-direction: column; gap: 8px; }
+
+.ctrl-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #5e6572);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.toggle-track {
+  display: flex;
+  background: var(--color-background-secondary, #f4f6fa);
+  border: 1px solid var(--color-border-secondary, #cfd5df);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  cursor: pointer;
+  position: relative;
+}
+
+.toggle-pill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: calc(50% - 6px);
+  border-radius: 8px;
+  transition: left 0.26s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s, border-color 0.25s;
+  z-index: 0;
+}
+
+.toggle-pill.off { left: 4px; background: #fcebeb; border: 1px solid #f7c1c1; }
+.toggle-pill.on { left: calc(50% + 2px); background: #eaf3de; border: 1px solid #c0dd97; }
+
+.toggle-opt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #5e6572);
+  position: relative;
+  z-index: 1;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.toggle-opt.active-off { color: #791f1f; }
+.toggle-opt.active-on { color: #3b6d11; }
+
+.people-ctrl {
+  display: flex;
+  align-items: center;
+  background: var(--color-background-secondary, #f4f6fa);
+  border: 1px solid var(--color-border-secondary, #cfd5df);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.people-btn {
+  width: 44px;
+  height: 42px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary, #222);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.people-btn:hover { background: #e8ebf2; }
+.people-btn:disabled { opacity: 0.3; cursor: default; }
+
+.people-count-display {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #222);
+  border-left: 1px solid var(--color-border-tertiary, #d9dce2);
+  border-right: 1px solid var(--color-border-tertiary, #d9dce2);
+  padding: 0 8px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.stats-list { display: flex; flex-direction: column; gap: 14px; }
+.stat-item { display: flex; flex-direction: column; gap: 6px; }
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-name {
+  font-size: 13px;
+  color: var(--color-text-secondary, #5e6572);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.stat-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary, #222);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-track {
+  height: 8px;
+  background: #dce2ea;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.6s ease, background-color 0.4s;
+}
+
+.cost-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--color-background-secondary, #f4f6fa);
+  border: 1px solid var(--color-border-tertiary, #d9dce2);
+  border-radius: 10px;
+}
+
+.cost-label { font-size: 13px; color: var(--color-text-secondary, #5e6572); }
+.cost-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary, #222);
+  font-variant-numeric: tabular-nums;
+}
+
+.room-container {
+  border-radius: 10px;
+  border: 1px solid #cfd5df;
+  overflow: hidden;
+  background: #fff;
+  position: relative;
+  height: 330px;
+  box-shadow: 0 18px 26px -24px rgba(0, 0, 0, 0.45);
+}
+
+.room-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #d9dce2;
+  background: #fafbfd;
+}
+
+.room-title-label {
+  font-size: 12px;
+  color: var(--color-text-secondary, #5e6572);
+}
+
+.state-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.3s, color 0.3s;
+}
+
+.state-badge.off { background: #fcebeb; color: #791f1f; border: 1px solid #f7c1c1; }
+.state-badge.on { background: #eaf3de; color: #3b6d11; border: 1px solid #c0dd97; }
+
+.room-scene {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 40px);
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--room-wall) 0%, #f6f8fd 58%, var(--room-floor) 58%, #eee7da 100%);
+}
+
+.room-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background-image:
+    linear-gradient(rgba(120, 130, 150, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 130, 150, 0.2) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.room-window {
+  position: absolute;
+  top: 22px;
+  left: 24px;
+  width: 140px;
+  height: 84px;
+  border-radius: 10px;
+  border: 1px solid #b9c6da;
+  background: linear-gradient(180deg, #d5ecff 0%, #c6def8 46%, #eaf6ff 100%);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.room-window::before,
+.room-window::after {
+  content: "";
+  position: absolute;
+  background: rgba(123, 145, 173, 0.5);
+}
+
+.room-window::before { left: 50%; top: 0; bottom: 0; width: 1px; }
+.room-window::after { top: 50%; left: 0; right: 0; height: 1px; }
+
+.air-quality-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.28;
+  background: radial-gradient(circle at 65% 40%, rgba(106, 180, 255, 0.3), rgba(106, 180, 255, 0.06) 60%, transparent 90%);
+  transition: opacity 0.35s ease, background 0.35s ease;
+}
+
+.fan-unit {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fafbfd 0%, #edf1f7 100%);
+  border: 1px solid #c9d2df;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  z-index: 3;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+.fan-unit.on {
+  border-color: #639922;
+  box-shadow: 0 0 0 4px rgba(99, 153, 34, 0.15), 0 8px 18px -12px rgba(39, 83, 11, 0.7);
+  transform: translateY(-1px);
+}
+
+.fan-svg { transition: opacity 0.3s; }
+.fan-unit.off .fan-svg { opacity: 0.45; }
+.fan-unit.on .fan-rotor { animation: spinFan 0.7s linear infinite; transform-origin: 12px 12px; }
+
+.fan-status-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color 0.3s;
+}
+
+.fan-unit.off .fan-status-label { color: #707780; }
+.fan-unit.on .fan-status-label { color: #3b6d11; }
+
+.airflow-lines {
+  position: absolute;
+  top: 34px;
+  right: 102px;
+  width: 180px;
+  height: 62px;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 2;
+}
+
+.air-line {
+  stroke: #2f8fe3;
+  stroke-width: 2;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+
+.fan-unit.on ~ .airflow-lines .air-line {
+  opacity: 1;
+  animation: moveAir 1.15s ease-in-out infinite;
+}
+
+.fan-unit.on ~ .airflow-lines .air-line:nth-child(2) { animation-delay: 0.2s; }
+.fan-unit.on ~ .airflow-lines .air-line:nth-child(3) { animation-delay: 0.4s; }
+
+.scene-hud {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 5;
+  gap: 10px;
+}
+
+.hud-pill {
+  padding: 7px 10px;
+  border-radius: 20px;
+  border: 1px solid #ccd6e3;
+  background: rgba(255, 255, 255, 0.86);
+  color: #2f3a45;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(2px);
+}
+
+.hud-pill strong {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.hud-pill.good { border-color: #b8d7a8; color: #3d6a20; }
+.hud-pill.warn { border-color: #efcc9c; color: #9c6012; }
+.hud-pill.bad { border-color: #efb4b3; color: #8f1f1e; }
+
+.people-area {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 122px;
+  bottom: 52px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  align-content: start;
+  z-index: 4;
+}
+
+.person-figure {
+  position: relative;
+  min-height: 54px;
+  border-radius: 10px;
+  border: 1px solid #d3dce8;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8fc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 5px 12px -11px rgba(0, 0, 0, 0.45);
+  animation: popIn 0.25s ease both;
+}
+
+.person-figure::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(148, 155, 166, 0.45);
+  top: 8px;
+  right: 8px;
+}
+
+.person-avatar {
+  position: relative;
+  width: 22px;
+  height: 28px;
+}
+
+.person-head {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: #50545a;
+}
+
+.person-body {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  width: 14px;
+  height: 11px;
+  border-radius: 5px 5px 4px 4px;
+  transform: translateX(-50%);
+  background: #626974;
+}
+
+.person-legs {
+  position: absolute;
+  left: 50%;
+  top: 21px;
+  width: 14px;
+  height: 8px;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-between;
+}
+
+.person-leg {
+  width: 5px;
+  border-radius: 0 0 3px 3px;
+  background: #4e5560;
+}
+
+.breath-ring {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(130, 140, 154, 0.5);
+  border-radius: 50%;
+  animation: pulseRing 1.8s ease-out infinite;
+}
+
+.fan-unit.on ~ .people-area .breath-ring {
+  border-color: rgba(52, 154, 233, 0.32);
+  animation-duration: 1.2s;
+}
+
+.people-empty {
+  grid-column: 1 / -1;
+  align-self: center;
+  justify-self: center;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px dashed #ccd4df;
+  color: #6b7581;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.caption {
+  font-size: 11px;
+  color: var(--color-text-secondary, #5e6572);
+  text-align: center;
+  font-style: italic;
+}
+
+.alert-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.93);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  border-radius: var(--border-radius-lg, 12px);
+}
+
+.alert-overlay.visible { display: flex; }
+
+.alert-box {
+  background: var(--color-background-primary, #fff);
+  border: 1px solid var(--color-border-secondary, #cfd5df);
+  border-radius: 12px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 320px;
+}
+
+.alert-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alert-icon-wrap.co2 { background: #fcebeb; }
+.alert-icon-wrap.humi { background: #e6f1fb; }
+
+.alert-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary, #222);
+  margin-bottom: 8px;
+}
+
+.alert-text {
+  font-size: 13px;
+  color: var(--color-text-secondary, #5e6572);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.btn-restart {
+  display: inline-block;
+  padding: 9px 20px;
+  background: #fff;
+  border: 1px solid #cfd5df;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary, #222);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-restart:hover { background: #f3f6fb; }
+
+@keyframes spinFan {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes moveAir {
+  0% { stroke-dashoffset: 130; opacity: 0; }
+  20% { opacity: 0.9; }
+  80% { opacity: 0.85; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulseRing {
+  0% { transform: scale(0.35); opacity: 0.55; }
+  70% { transform: scale(1.25); opacity: 0; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+@media (max-width: 700px) {
+  .sim-body { grid-template-columns: 1fr; }
+  .col-left { border-right: none; border-bottom: 1px solid #d9dce2; }
+  .room-container { height: 350px; }
+}
+</style>
+
+<div class="sim-wrap">
+  <h2 class="sr-only">Simulateur de ventilation et d'occupation : impact sur la qualité de l'air intérieur</h2>
+
+  <div class="sim-card">
+    <div class="sim-header">
+      <h2>Ventilation et occupation de la pièce</h2>
+      <p>Active ou coupe la ventilation, puis fais varier le nombre de personnes dans la pièce. Observe l'impact sur l'humidité et le CO₂.</p>
+    </div>
+
+    <div class="sim-body">
+      <div class="col-left">
+        <div class="ctrl-section">
+          <span class="ctrl-label">Ventilation</span>
+          <div class="toggle-track" onclick="handleVentToggle()" id="vent-toggle">
+            <div class="toggle-pill off" id="vent-pill"></div>
+            <div class="toggle-opt active-off" id="opt-off">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="5.5" stroke="#A32D2D" stroke-width="1.2"></circle>
+                <line x1="4" y1="4" x2="10" y2="10" stroke="#A32D2D" stroke-width="1.2" stroke-linecap="round"></line>
+              </svg>
+              Désactivée
+            </div>
+            <div class="toggle-opt" id="opt-on">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="5.5" stroke="#639922" stroke-width="1.2"></circle>
+                <path d="M4.5 7 L6.5 9 L9.5 5" stroke="#639922" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              Activée
+            </div>
+          </div>
+        </div>
+
+        <div class="ctrl-section">
+          <span class="ctrl-label">Nombre de personnes</span>
+          <div class="people-ctrl">
+            <button class="people-btn" id="btn-minus" onclick="changePeople(-1)">−</button>
+            <div class="people-count-display">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0" aria-hidden="true">
+                <circle cx="7" cy="4.5" r="2.5" stroke="var(--color-text-secondary, #5e6572)" stroke-width="1.2" fill="none"></circle>
+                <path d="M2 12c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="var(--color-text-secondary, #5e6572)" stroke-width="1.2" stroke-linecap="round" fill="none"></path>
+              </svg>
+              <span id="val-people" style="font-variant-numeric:tabular-nums;">2</span>
+              <span style="font-size:12px; color:var(--color-text-secondary, #5e6572);">personnes</span>
+            </div>
+            <button class="people-btn" id="btn-plus" onclick="changePeople(1)">+</button>
+          </div>
+        </div>
+
+        <div class="stats-list">
+          <div class="stat-item">
+            <div class="stat-header">
+              <span class="stat-name">
+                <span class="stat-dot" id="dot-humi" style="background:#378ADD;"></span>
+                Humidité relative
+              </span>
+              <span class="stat-value" id="val-humi">45%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-humi" style="width:45%; background:#378ADD;"></div>
+            </div>
+          </div>
+
+          <div class="stat-item">
+            <div class="stat-header">
+              <span class="stat-name">
+                <span class="stat-dot" id="dot-co2" style="background:#888780;"></span>
+                CO₂
+              </span>
+              <span class="stat-value" id="val-co2">700 ppm</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-co2" style="width:35%; background:#888780;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cost-box">
+          <span class="cost-label">Coût ventilation</span>
+          <span class="cost-value" id="val-cost">0,00 €</span>
+        </div>
+      </div>
+
+      <div class="col-right">
+        <div class="room-container">
+          <div class="room-top-bar">
+            <span class="room-title-label">Pièce occupée</span>
+            <span class="state-badge off" id="state-badge">Ventilation désactivée</span>
+          </div>
+
+          <div class="room-scene">
+            <div class="room-grid"></div>
+            <div class="room-window"></div>
+            <div class="air-quality-layer" id="air-layer"></div>
+
+            <div class="fan-unit off" id="fan-unit">
+              <svg class="fan-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <g class="fan-rotor">
+                  <path d="M12 12 C12 8 9 5 6 6 C7 9 9 11 12 12Z" fill="#5F5E5A"></path>
+                  <path d="M12 12 C16 12 19 9 18 6 C15 7 13 9 12 12Z" fill="#5F5E5A"></path>
+                  <path d="M12 12 C8 12 5 15 6 18 C9 17 11 15 12 12Z" fill="#5F5E5A"></path>
+                  <path d="M12 12 C12 16 15 19 18 18 C17 15 15 13 12 12Z" fill="#5F5E5A"></path>
+                </g>
+                <circle cx="12" cy="12" r="3" fill="#2C2C2A"></circle>
+              </svg>
+              <span class="fan-status-label" id="fan-label">off</span>
+            </div>
+
+            <svg class="airflow-lines" viewBox="0 0 180 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path class="air-line" d="M180 10 Q132 12 84 16 Q42 21 6 24" stroke-dasharray="130" stroke-dashoffset="130"></path>
+              <path class="air-line" d="M180 30 Q134 31 88 33 Q44 36 8 40" stroke-dasharray="130" stroke-dashoffset="130"></path>
+              <path class="air-line" d="M180 50 Q136 49 90 47 Q48 45 12 53" stroke-dasharray="130" stroke-dashoffset="130"></path>
+            </svg>
+
+            <div class="people-area" id="people-area"></div>
+
+            <div class="scene-hud">
+              <div class="hud-pill" id="scene-quality">Qualité d'air : correcte</div>
+              <div class="hud-pill" id="scene-people">Occupation : <strong>2</strong>/12</div>
+            </div>
+          </div>
+        </div>
+        <p class="caption">Simulation simplifiée de l'air intérieur</p>
+      </div>
+    </div>
+
+    <div class="alert-overlay" id="alert-overlay">
+      <div class="alert-box">
+        <div class="alert-icon-wrap" id="alert-icon-wrap">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" id="alert-svg" aria-hidden="true">
+            <path d="M10 3 L18 17 H2 Z" stroke="#A32D2D" stroke-width="1.4" fill="none" stroke-linejoin="round"></path>
+            <line x1="10" y1="8" x2="10" y2="12" stroke="#A32D2D" stroke-width="1.4" stroke-linecap="round"></line>
+            <circle cx="10" cy="14.5" r="0.8" fill="#A32D2D"></circle>
+          </svg>
+        </div>
+        <p class="alert-title" id="alert-title">Alerte</p>
+        <p class="alert-text" id="alert-text"></p>
+        <button class="btn-restart" onclick="resetSim()">Recommencer l'expérience</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let st = { ventOn: false, people: 2, humi: 45, co2: 700, cost: 0, paused: false };
+
+function handleVentToggle() {
+  if (st.paused) return;
+  setVent(!st.ventOn);
+  updateSceneVisuals();
+}
+
+function setVent(on) {
+  st.ventOn = on;
+  const pill = document.getElementById("vent-pill");
+  const optOff = document.getElementById("opt-off");
+  const optOn = document.getElementById("opt-on");
+  const fanUnit = document.getElementById("fan-unit");
+  const badge = document.getElementById("state-badge");
+  const fanLabel = document.getElementById("fan-label");
+
+  pill.className = "toggle-pill " + (on ? "on" : "off");
+  optOff.className = "toggle-opt" + (on ? "" : " active-off");
+  optOn.className = "toggle-opt" + (on ? " active-on" : "");
+  fanUnit.className = "fan-unit " + (on ? "on" : "off");
+  fanLabel.textContent = on ? "on" : "off";
+  badge.textContent = on ? "Ventilation activée" : "Ventilation désactivée";
+  badge.className = "state-badge " + (on ? "on" : "off");
+}
+
+function changePeople(d) {
+  if (st.paused) return;
+  st.people = Math.min(12, Math.max(0, st.people + d));
+  document.getElementById("btn-minus").disabled = st.people <= 0;
+  document.getElementById("btn-plus").disabled = st.people >= 12;
+  renderPeople();
+  document.getElementById("val-people").textContent = st.people;
+  updateSceneVisuals();
+}
+
+function renderPeople() {
+  const area = document.getElementById("people-area");
+  area.innerHTML = "";
+
+  if (st.people === 0) {
+    const empty = document.createElement("div");
+    empty.className = "people-empty";
+    empty.textContent = "Aucune personne dans la pièce";
+    area.appendChild(empty);
+    return;
+  }
+
+  for (let i = 0; i < st.people; i++) {
+    const fig = document.createElement("div");
+    fig.className = "person-figure";
+    fig.innerHTML = [
+      '<div class="breath-ring"></div>',
+      '<div class="person-avatar">',
+      '<div class="person-head"></div>',
+      '<div class="person-body"></div>',
+      '<div class="person-legs"><div class="person-leg"></div><div class="person-leg"></div></div>',
+      "</div>"
+    ].join("");
+    area.appendChild(fig);
+  }
+}
+
+function getAirQualityLevel() {
+  if (st.co2 >= 1500 || st.humi >= 65) return "bad";
+  if (st.co2 >= 1000 || st.humi >= 55) return "warn";
+  return "good";
+}
+
+function updateSceneVisuals() {
+  const layer = document.getElementById("air-layer");
+  const quality = document.getElementById("scene-quality");
+  const scenePeople = document.getElementById("scene-people");
+
+  const level = getAirQualityLevel();
+  const occupancy = st.people / 12;
+  const haze = Math.min(0.68, 0.16 + occupancy * 0.2 + (st.co2 - 400) / 3000);
+
+  if (level === "good") {
+    layer.style.background = "radial-gradient(circle at 64% 36%, rgba(106,180,255,0.28), rgba(106,180,255,0.08) 58%, transparent 88%)";
+    quality.textContent = "Qualité d'air : correcte";
+  } else if (level === "warn") {
+    layer.style.background = "radial-gradient(circle at 64% 38%, rgba(238,176,104,0.36), rgba(232,161,91,0.12) 58%, transparent 90%)";
+    quality.textContent = "Qualité d'air : à surveiller";
+  } else {
+    layer.style.background = "radial-gradient(circle at 64% 38%, rgba(227,99,96,0.42), rgba(202,96,84,0.14) 58%, transparent 90%)";
+    quality.textContent = "Qualité d'air : dégradée";
+  }
+
+  layer.style.opacity = String(haze * (st.ventOn ? 0.72 : 1));
+  quality.className = "hud-pill " + level;
+  scenePeople.className = "hud-pill " + (st.people >= 9 ? "bad" : st.people >= 6 ? "warn" : "good");
+  scenePeople.innerHTML = "Occupation : <strong>" + st.people + "</strong>/12";
+}
+
+function triggerAlert(type, title, text) {
+  st.paused = true;
+  document.getElementById("alert-title").textContent = title;
+  document.getElementById("alert-text").textContent = text;
+  const wrap = document.getElementById("alert-icon-wrap");
+  const svg = document.getElementById("alert-svg");
+
+  if (type === "humi") {
+    wrap.className = "alert-icon-wrap humi";
+    svg.innerHTML = '<path d="M10 3 C10 3 5 9 5 13 C5 15.76 7.24 18 10 18 C12.76 18 15 15.76 15 13 C15 9 10 3 10 3Z" stroke="#185FA5" stroke-width="1.4" fill="none" stroke-linejoin="round"/>';
+  } else {
+    wrap.className = "alert-icon-wrap co2";
+    svg.innerHTML = '<path d="M10 3 L18 17 H2 Z" stroke="#A32D2D" stroke-width="1.4" fill="none" stroke-linejoin="round"/><line x1="10" y1="8" x2="10" y2="12" stroke="#A32D2D" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="14.5" r="0.8" fill="#A32D2D"/>';
+  }
+
+  document.getElementById("alert-overlay").classList.add("visible");
+}
+
+function resetSim() {
+  st = { ventOn: false, people: 2, humi: 45, co2: 700, cost: 0, paused: false };
+  document.getElementById("alert-overlay").classList.remove("visible");
+  document.getElementById("btn-minus").disabled = false;
+  document.getElementById("btn-plus").disabled = false;
+  setVent(false);
+  renderPeople();
+  document.getElementById("val-people").textContent = st.people;
+  updateDisplay();
+}
+
+function updateDisplay() {
+  document.getElementById("val-humi").textContent = Math.round(st.humi) + "%";
+  document.getElementById("val-co2").textContent = Math.round(st.co2) + " ppm";
+  document.getElementById("val-cost").textContent = st.cost.toFixed(2).replace(".", ",") + " €";
+
+  const hPct = Math.min(100, st.humi);
+  document.getElementById("bar-humi").style.width = hPct + "%";
+  const hColor = st.humi < 55 ? "#378ADD" : st.humi < 65 ? "#EF9F27" : "#E24B4A";
+  document.getElementById("bar-humi").style.background = hColor;
+  document.getElementById("dot-humi").style.background = hColor;
+
+  const co2Pct = Math.min(100, (st.co2 / 2000) * 100);
+  document.getElementById("bar-co2").style.width = co2Pct + "%";
+  const cColor = st.co2 < 1000 ? "#888780" : st.co2 < 1500 ? "#EF9F27" : "#E24B4A";
+  document.getElementById("bar-co2").style.background = cColor;
+  document.getElementById("dot-co2").style.background = cColor;
+
+  updateSceneVisuals();
+}
+
+function tick() {
+  if (st.paused) return;
+
+  const humiProd = st.people * 0.25;
+  const co2Prod = st.people * 22;
+
+  if (st.ventOn) {
+    st.humi += humiProd - 0.9;
+    st.co2 += co2Prod - 55;
+    st.cost += 0.03;
+  } else {
+    st.humi += humiProd;
+    st.co2 += co2Prod;
+    st.cost += 0.005;
+  }
+
+  st.humi = Math.max(30, Math.min(85, st.humi));
+  st.co2 = Math.max(400, Math.min(2500, st.co2));
+  updateDisplay();
+
+  if (st.co2 >= 1800) {
+    triggerAlert("co2", "Air trop chargé", "Le taux de CO2 devient trop élevé. Plus il y a de personnes dans la pièce, plus l air se dégrade rapidement sans ventilation.");
+  } else if (st.humi >= 70) {
+    triggerAlert("humi", "Humidité excessive", "L humidité s accumule dans la pièce. Sans ventilation, l air humide reste piégé.");
+  }
+}
+
+renderPeople();
+updateDisplay();
+setVent(false);
+setInterval(tick, 1000);
+</script>
